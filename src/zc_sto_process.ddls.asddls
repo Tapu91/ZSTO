@@ -37,6 +37,7 @@ define root view entity ZC_STO_Process
 
       CurrentStepSeq,
       OverallStatus,
+      OverallStatusText,
       ProcessingLock,
       NextActionText,
       StatusCriticality,

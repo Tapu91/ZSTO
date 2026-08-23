@@ -10,15 +10,6 @@
   presentationVariant: [{ sortOrder: [{ by: 'ProcessID', direction: #DESC }] }]
 }
 
-// ---------------------------------------------------------------------------
-// Side effects: after the action changes CurrentStepSeq, Fiori Elements must
-// re-read the step log (process flow), the mapping rows and the item table
-// (its trace columns). Without this the flow keeps showing the old state.
-// ---------------------------------------------------------------------------
-//@Common.SideEffects#ProcessStepExecuted: {
-//  SourceProperties: [ 'CurrentStepSeq', 'OverallStatus' ],
-//  TargetEntities  : [ { '': '_Step' }, { '': '_ItemDoc' }, { '': '_Item' } ]
-//}
 
 annotate view ZC_STO_Process with
 {
@@ -110,10 +101,11 @@ annotate view ZC_STO_Process with
   @UI.lineItem: [{ position: 20, importance: #HIGH, criticality: 'StatusCriticality' }]
   @UI.fieldGroup: [{ qualifier: 'StatusData', position: 10, criticality: 'StatusCriticality' }]
   @UI.selectionField: [{ position: 20 }]
-  // No #TEXT_ONLY here: that needs an @ObjectModel.text.element or a text
-  // association on OVERALL_STATUS, and there is none - the column would
-  // render blank. Add the domain fixed-value texts first if you want it.
+  @UI.textArrangement: #TEXT_FIRST
   OverallStatus;
+
+  @UI.hidden: true
+  OverallStatusText;
 
   @UI.fieldGroup: [{ qualifier: 'StatusData', position: 20, label: 'Next Action' }]
   NextActionText;

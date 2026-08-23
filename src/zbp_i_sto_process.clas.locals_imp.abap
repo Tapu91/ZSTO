@@ -410,6 +410,7 @@ CLASS lhc_process IMPLEMENTATION.
     LOOP AT is_change-item_mapping ASSIGNING FIELD-SYMBOL(<ls_map>).
       APPEND VALUE #(
         %cid           = |MAP_{ is_change-step_seq }_{ <ls_map>-process_item }|
+        %is_draft   =    is_process-%is_draft
         ProcessItem    = <ls_map>-process_item
         StepSeq        = is_change-step_seq
         StepName       = is_change-step_name

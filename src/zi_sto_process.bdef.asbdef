@@ -117,9 +117,7 @@ etag master LocalLastChangedAt
   field ( numbering : managed, readonly ) ItemUUID;
   // RAP fills the parent key itself on CREATE BY \_Item.
   field ( readonly ) ProcessUUID, LocalLastChangedAt;
-//  field ( readonly ) POItem, DeliveryDocument, DeliveryItem,
-//                     GIMaterialDoc, BillingDocument, GRMaterialDoc,
-//                     GRMaterialDocItem;
+  field ( readonly ) BaseUnit,ProcessItem;
   field ( mandatory ) Material, Quantity;
 
   update ( features : instance );
