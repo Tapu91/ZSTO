@@ -1,0 +1,46 @@
+@Metadata.layer: #CORE
+
+@UI: {
+  headerInfo: {
+    typeName:       'Document Trace',
+    typeNamePlural: 'Document Trace',
+    title:          { type: #STANDARD, value: 'DocumentDisplay' }
+  },
+  presentationVariant: [{ sortOrder: [{ by: 'ProcessItem', direction: #ASC },
+                                      { by: 'StepSeq',     direction: #ASC }] }]
+}
+
+annotate view ZC_STO_ProcessItemDoc with
+{
+  @UI.lineItem: [{ position: 10, importance: #HIGH, label: 'Process Item' }]
+  ProcessItem;
+
+  @UI.lineItem: [{ position: 20, importance: #HIGH, label: 'Step' }]
+  StepName;
+
+  @UI.lineItem: [{ position: 30, importance: #HIGH, label: 'Document' }]
+  DocumentNumber;
+
+  @UI.lineItem: [{ position: 40, importance: #HIGH, label: 'Document Item' }]
+  DocumentItem;
+
+  @UI.lineItem: [{ position: 50, importance: #MEDIUM, label: 'Quantity' }]
+  Quantity;
+
+  @UI.hidden: true
+  MappingUUID;
+  @UI.hidden: true
+  ProcessUUID;
+  @UI.hidden: true
+  StepSeq;
+  @UI.hidden: true
+  DocumentYear;
+  @UI.hidden: true
+  DocumentDisplay;
+  @UI.hidden: true
+  BaseUnit;
+  @UI.hidden: true
+  CreatedBy;
+  @UI.hidden: true
+  CreatedAt;
+}

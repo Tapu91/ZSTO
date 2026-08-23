@@ -1,0 +1,72 @@
+@Metadata.layer: #CORE
+
+@UI: {
+  headerInfo: {
+    typeName:       'Item',
+    typeNamePlural: 'Items',
+    title:          { type: #STANDARD, value: 'ProcessItem' },
+    description:    { type: #STANDARD, value: 'Material' }
+  },
+  presentationVariant: [{ sortOrder: [{ by: 'ProcessItem', direction: #ASC }] }]
+}
+
+annotate view ZC_STO_ProcessItem with
+{
+  @UI.lineItem: [{ position: 10, importance: #HIGH, label: 'Item' }]
+  @UI.identification: [{ position: 10 }]
+  ProcessItem;
+
+  @UI.lineItem: [{ position: 20, importance: #HIGH }]
+  @UI.identification: [{ position: 20 }]
+  Material;
+
+  @UI.lineItem: [{ position: 30, importance: #HIGH }]
+  @UI.identification: [{ position: 30 }]
+  Quantity;
+
+  @UI.lineItem: [{ position: 40, importance: #HIGH, label: 'Unit' }]
+  @UI.identification: [{ position: 40 }]
+  BaseUnit;
+
+  @UI.lineItem: [{ position: 50, importance: #MEDIUM, label: 'Value' }]
+  @UI.identification: [{ position: 50 }]
+  ItemValue;
+
+  @UI.lineItem: [{ position: 60, importance: #HIGH }]
+  @UI.identification: [{ position: 60 }]
+  Batch;
+
+  // ---------------------------------------------------------------------
+  // Read-only horizontal trace: the line-level mapping made visible.
+  // ---------------------------------------------------------------------
+  @UI.lineItem: [{ position: 70, importance: #MEDIUM, label: 'PO Item' }]
+  @UI.identification: [{ position: 70, label: 'PO Item' }]
+  POItem;
+
+  @UI.lineItem: [{ position: 80, importance: #LOW, label: 'Delivery' }]
+  @UI.identification: [{ position: 80, label: 'Delivery' }]
+  DeliveryDocument;
+
+  @UI.lineItem: [{ position: 90, importance: #LOW, label: 'Delivery Item' }]
+  @UI.identification: [{ position: 90, label: 'Delivery Item' }]
+  DeliveryItem;
+
+  @UI.lineItem: [{ position: 100, importance: #LOW, label: 'GR Document' }]
+  @UI.identification: [{ position: 100, label: 'GR Document' }]
+  GRMaterialDoc;
+
+  @UI.hidden: true
+  ItemUUID;
+  @UI.hidden: true
+  ProcessUUID;
+  @UI.hidden: true
+  Currency;
+  @UI.hidden: true
+  PODocument;
+  @UI.hidden: true
+  GIMaterialDoc;
+  @UI.hidden: true
+  BillingDocument;
+  @UI.hidden: true
+  GRMaterialDocItem;
+}

@@ -1,0 +1,189 @@
+@Metadata.layer: #CORE
+
+@UI: {
+  headerInfo: {
+    typeName:       'STO Process',
+    typeNamePlural: 'STO Processes',
+    title:          { type: #STANDARD, value: 'ProcessID' },
+    description:    { type: #STANDARD, value: 'NextActionText' }
+  },
+  presentationVariant: [{ sortOrder: [{ by: 'ProcessID', direction: #DESC }] }]
+}
+
+// ---------------------------------------------------------------------------
+// Side effects: after the action changes CurrentStepSeq, Fiori Elements must
+// re-read the step log (process flow), the mapping rows and the item table
+// (its trace columns). Without this the flow keeps showing the old state.
+// ---------------------------------------------------------------------------
+//@Common.SideEffects#ProcessStepExecuted: {
+//  SourceProperties: [ 'CurrentStepSeq', 'OverallStatus' ],
+//  TargetEntities  : [ { '': '_Step' }, { '': '_ItemDoc' }, { '': '_Item' } ]
+//}
+
+annotate view ZC_STO_Process with
+{
+  @UI.facet: [
+    // ---------- Object page header facets ----------
+    {
+      id:            'HeaderStatus',
+      purpose:       #HEADER,
+      type:          #FIELDGROUP_REFERENCE,
+      targetQualifier: 'StatusData',
+      label:         'Status',
+      position:      10
+    },
+    {
+      id:            'HeaderRoute',
+      purpose:       #HEADER,
+      type:          #FIELDGROUP_REFERENCE,
+      targetQualifier: 'RouteData',
+      label:         'Transfer',
+      position:      20
+    },
+
+    // ---------- Object page body ----------
+    {
+      id:       'GeneralInfo',
+      type:     #COLLECTION,
+      label:    'General Information',
+      position: 10
+    },
+    {
+      id:            'HeaderData',
+      parentId:      'GeneralInfo',
+      type:          #FIELDGROUP_REFERENCE,
+      targetQualifier: 'HeaderData',
+      label:         'Transfer Details',
+      position:      10
+    },
+    {
+      id:            'OrgData',
+      parentId:      'GeneralInfo',
+      type:          #FIELDGROUP_REFERENCE,
+      targetQualifier: 'OrgData',
+      label:         'Organizational Data',
+      position:      20
+    },
+    {
+      id:           'Items',
+      type:         #LINEITEM_REFERENCE,
+      label:        'Items',
+      position:     20,
+      targetElement: '_Item'
+    },
+    {
+      id:           'Steps',
+      type:         #LINEITEM_REFERENCE,
+      label:        'Process Steps',
+      position:     30,
+      targetElement: '_Step'
+    },
+    {
+      id:           'Trace',
+      type:         #LINEITEM_REFERENCE,
+      label:        'Document Trace',
+      position:     40,
+      targetElement: '_ItemDoc'
+    }
+    // NOTE: the graphical Process Flow section is added as a custom
+    // section extension - see 09_ui/ in the README. It binds to _Step.
+  ]
+
+  @UI.lineItem: [
+    { position: 10, importance: #HIGH },
+    { type: #FOR_ACTION, dataAction: 'processNextStep',
+      label: 'Execute Next Step', invocationGrouping: #ISOLATED }
+  ]
+  @UI.selectionField: [{ position: 10 }]
+  // The OBJECT PAGE button comes from an #FOR_ACTION entry in identification.
+  // The @UI.lineItem entry above only puts the button on the LIST REPORT
+  // toolbar - one does not imply the other.
+  @UI.identification: [
+    { position: 10 },
+    { type: #FOR_ACTION, dataAction: 'processNextStep',
+      label: 'Execute Next Step', importance: #HIGH },
+    { type: #FOR_ACTION, dataAction: 'resetFailedStep',
+      label: 'Reset Failed Step', importance: #MEDIUM }
+  ]
+  ProcessID;
+
+  @UI.lineItem: [{ position: 20, importance: #HIGH, criticality: 'StatusCriticality' }]
+  @UI.fieldGroup: [{ qualifier: 'StatusData', position: 10, criticality: 'StatusCriticality' }]
+  @UI.selectionField: [{ position: 20 }]
+  // No #TEXT_ONLY here: that needs an @ObjectModel.text.element or a text
+  // association on OVERALL_STATUS, and there is none - the column would
+  // render blank. Add the domain fixed-value texts first if you want it.
+  OverallStatus;
+
+  @UI.fieldGroup: [{ qualifier: 'StatusData', position: 20, label: 'Next Action' }]
+  NextActionText;
+
+  @UI.hidden: true
+  StatusCriticality;
+
+  @UI.lineItem: [{ position: 30, importance: #HIGH }]
+  @UI.fieldGroup: [{ qualifier: 'RouteData', position: 10 }, { qualifier: 'HeaderData', position: 10 }]
+  @UI.selectionField: [{ position: 30 }]
+  @UI.identification: [{ position: 20 }]
+  FromPlant;
+
+  @UI.lineItem: [{ position: 40, importance: #HIGH }]
+  @UI.fieldGroup: [{ qualifier: 'RouteData', position: 20 }, { qualifier: 'HeaderData', position: 20 }]
+  @UI.selectionField: [{ position: 40 }]
+  @UI.identification: [{ position: 30 }]
+  ToPlant;
+
+  @UI.fieldGroup: [{ qualifier: 'HeaderData', position: 30 }]
+  @UI.identification: [{ position: 40 }]
+  FromStorLoc;
+
+  @UI.fieldGroup: [{ qualifier: 'HeaderData', position: 40 }]
+  @UI.identification: [{ position: 50 }]
+  ToStorLoc;
+
+  @UI.lineItem: [{ position: 50, importance: #MEDIUM }]
+  @UI.fieldGroup: [{ qualifier: 'RouteData', position: 30 }, { qualifier: 'HeaderData', position: 50 }]
+  @UI.selectionField: [{ position: 50 }]
+  @UI.identification: [{ position: 60 }]
+  TransferDate;
+
+  @UI.fieldGroup: [{ qualifier: 'OrgData', position: 10 }]
+  CompanyCode;
+  @UI.fieldGroup: [{ qualifier: 'OrgData', position: 20 }]
+  PurchasingOrg;
+  @UI.fieldGroup: [{ qualifier: 'OrgData', position: 30 }]
+  PurchasingGroup;
+  @UI.fieldGroup: [{ qualifier: 'OrgData', position: 40 }]
+  PODocumentType;
+  @UI.fieldGroup: [{ qualifier: 'OrgData', position: 50 }]
+  ShippingPoint;
+  @UI.fieldGroup: [{ qualifier: 'OrgData', position: 60 }]
+  IsIntercompany;
+
+  @UI.lineItem: [{ position: 60, importance: #MEDIUM }]
+  @UI.fieldGroup: [{ qualifier: 'StatusData', position: 30 }]
+  PurchaseOrder;
+
+  @UI.lineItem: [{ position: 70, importance: #LOW }]
+  @UI.fieldGroup: [{ qualifier: 'StatusData', position: 40 }]
+  OutboundDelivery;
+
+  @UI.fieldGroup: [{ qualifier: 'StatusData', position: 50 }]
+  BillingDocument;
+
+  @UI.fieldGroup: [{ qualifier: 'StatusData', position: 60 }]
+  GRMaterialDoc;
+
+  @UI.hidden: true
+  ProcessUUID;
+  @UI.hidden: true
+  CurrentStepSeq;
+  @UI.hidden: true
+  ProcessingLock;
+  @UI.hidden: true
+  GIMaterialDoc;
+  @UI.hidden: true
+  GIMaterialDocYear;
+  @UI.hidden: true
+  GRMaterialDocYear;
+}

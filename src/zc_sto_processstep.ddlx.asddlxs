@@ -1,0 +1,61 @@
+@Metadata.layer: #CORE
+
+@UI: {
+  headerInfo: {
+    typeName:       'Process Step',
+    typeNamePlural: 'Process Steps',
+    title:          { type: #STANDARD, value: 'StepName' },
+    description:    { type: #STANDARD, value: 'DocumentNumber' }
+  },
+  presentationVariant: [{ sortOrder: [{ by: 'StepSeq', direction: #ASC }] }]
+}
+
+annotate view ZC_STO_ProcessStep with
+{
+  @UI.lineItem: [{ position: 10, importance: #HIGH, label: 'Seq' }]
+  StepSeq;
+
+  @UI.lineItem: [{ position: 20, importance: #HIGH, label: 'Step' }]
+  StepName;
+
+  @UI.lineItem: [{ position: 30, importance: #HIGH, criticality: 'StatusCriticality', label: 'Status' }]
+  StepStatus;
+
+  @UI.lineItem: [{ position: 40, importance: #HIGH, label: 'Document' }]
+  DocumentNumber;
+
+  @UI.lineItem: [{ position: 50, importance: #MEDIUM, label: 'Date' }]
+  DocumentDate;
+
+  @UI.lineItem: [{ position: 60, importance: #HIGH, label: 'Message' }]
+  ErrorMessage;
+
+  @UI.lineItem: [{ position: 70, importance: #LOW, label: 'Processed At' }]
+  ProcessedAt;
+
+  @UI.hidden: true
+  StepUUID;
+  @UI.hidden: true
+  ProcessUUID;
+  @UI.hidden: true
+  DocumentYear;
+  @UI.hidden: true
+  IsSkipped;
+  @UI.hidden: true
+  StatusCriticality;
+  @UI.hidden: true
+  ProcessedBy;
+
+  // Consumed by the ProcessFlow control via the custom section, not rendered
+  // as table columns.
+  @UI.hidden: true
+  FlowState;
+  @UI.hidden: true
+  FlowStateText;
+  @UI.hidden: true
+  FlowNodeId;
+  @UI.hidden: true
+  FlowLaneId;
+  @UI.hidden: true
+  FlowIcon;
+}
