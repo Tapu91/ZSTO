@@ -1,0 +1,48 @@
+projection;
+strict ( 2 );
+use draft;
+use side effects;
+
+define behavior for ZC_STO_Process alias Process
+use etag
+{
+  use create;
+  use update;
+  use delete;
+
+  use action processNextStep;
+  use action resetFailedStep;
+
+  use action Activate;
+  use action Discard;
+  use action Edit;
+  use action Resume;
+  use action Prepare;
+
+  use association _Item    { create; with draft; }
+  use association _Step    { with draft; }
+  use association _ItemDoc { with draft; }
+}
+
+define behavior for ZC_STO_ProcessItem alias Item
+use etag
+{
+  use update;
+  use delete;
+
+  use association _Process { with draft; }
+  use association _ItemDoc { with draft; }
+}
+
+define behavior for ZC_STO_ProcessStep alias Step
+use etag
+{
+  use association _Process { with draft; }
+  use association _ItemDoc { with draft; }
+}
+
+define behavior for ZC_STO_ProcessItemDoc alias ItemDoc
+use etag
+{
+  use association _Process { with draft; }
+}

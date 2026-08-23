@@ -1,0 +1,237 @@
+managed implementation in class zbp_i_sto_process unique;
+strict ( 2 );
+with draft;
+
+define behavior for ZI_STO_Process alias Process
+persistent table zsto_process_h
+draft table zsto_proc_h_d
+lock master
+total etag LastChangedAt
+authorization master ( instance, global )
+etag master LocalLastChangedAt
+{
+  field ( numbering : managed, readonly ) ProcessUUID;
+
+
+  field ( readonly ) NextActionText,
+                     StatusCriticality,
+                     CreatedBy,
+                     CreatedAt,
+                     LastChangedBy,
+                     LastChangedAt,
+                     LocalLastChangedAt;
+
+  field ( mandatory ) FromPlant, ToPlant, TransferDate;
+
+  create;
+  update;
+  delete ( features : instance );
+
+  // -------------------------------------------------------------------
+  // THE action button on the object page. One click = one document.
+  // -------------------------------------------------------------------
+  action ( features : instance ) processNextStep result [1] $self;
+
+  // Clears an 'E' step so the same step can be retried cleanly.
+  action ( features : instance ) resetFailedStep result [1] $self;
+
+  determination setInitialState      on modify { create; }
+  determination assignProcessID      on save   { create; }
+
+  // Lays down one step-log row per configured step, through RAP instead of
+  // the direct INSERT that used to live in the saver.
+  determination createStepLog        on save   { create; }
+
+  validation validateHeader          on save   { create; field FromPlant, ToPlant, TransferDate; }
+  validation validateItems           on save   { create; }
+  validation validateConfiguration   on save   { create; }
+//  validation validateNotInProcess    on save   { update; delete; }
+
+  draft action Activate optimized;
+  draft action Discard;
+  draft action Edit;
+  draft action Resume;
+  draft determine action Prepare
+  {
+    validation validateHeader;
+    validation validateItems;
+    validation validateConfiguration;
+  }
+
+side effects {
+ field CurrentStepSeq affects entity _ItemDoc, entity _Step, entity _Item ;
+ field OverallStatus affects entity _ItemDoc, entity _Step, entity _Item ;
+ action processNextStep affects entity _ItemDoc, entity _Step, entity _Item ;
+}
+
+  association _Item    { create ( features : instance ); with draft; }
+  // create is needed so the pool can use CREATE BY \_Step / \_ItemDoc.
+  // Both child entities declare "internal create", so this is reachable
+  // only from the behavior pool - never from the OData client.
+  association _Step    { internal create; with draft; }
+  association _ItemDoc { internal create; with draft; }
+
+  mapping for zsto_process_h
+  {
+    ProcessUUID          = process_uuid;
+    ProcessID            = process_id;
+    FromPlant            = from_plant;
+    ToPlant              = to_plant;
+    FromStorLoc          = from_stor_loc;
+    ToStorLoc            = to_stor_loc;
+    TransferDate         = transfer_date;
+    CompanyCode          = comp_code;
+    PurchasingOrg        = purch_org;
+    PurchasingGroup      = purch_group;
+    PODocumentType       = po_doc_type;
+    ShippingPoint        = shipping_point;
+    IsIntercompany       = is_intercompany;
+    CurrentStepSeq       = current_step_seq;
+    OverallStatus        = overall_status;
+    ProcessingLock       = processing_lock;
+    PurchaseOrder        = purchase_order;
+    OutboundDelivery     = outbound_delivery;
+    GIMaterialDoc        = gi_material_doc;
+    GIMaterialDocYear    = gi_material_doc_year;
+    BillingDocument      = billing_document;
+    GRMaterialDoc        = gr_material_doc;
+    GRMaterialDocYear    = gr_material_doc_year;
+    CreatedBy            = created_by;
+    CreatedAt            = created_at;
+    LastChangedBy        = last_changed_by;
+    LastChangedAt        = last_changed_at;
+    LocalLastChangedAt   = local_last_changed_at;
+  }
+}
+
+// ===========================================================================
+// CHILD: Items
+// ===========================================================================
+define behavior for ZI_STO_ProcessItem alias Item
+persistent table zsto_process_i
+draft table zsto_proc_i_d
+lock dependent by _Process
+authorization dependent by _Process
+etag master LocalLastChangedAt
+{
+  field ( numbering : managed, readonly ) ItemUUID;
+  // RAP fills the parent key itself on CREATE BY \_Item.
+  field ( readonly ) ProcessUUID, LocalLastChangedAt;
+//  field ( readonly ) POItem, DeliveryDocument, DeliveryItem,
+//                     GIMaterialDoc, BillingDocument, GRMaterialDoc,
+//                     GRMaterialDocItem;
+  field ( mandatory ) Material, Quantity;
+
+  update ( features : instance );
+  delete ( features : instance );
+
+  determination deriveMaterialData on modify { create; field Material; }
+
+  // Assigns the STABLE ANCHOR (0010, 0020, ...). On the ITEM, not the
+  // header, so items added in a later edit also get a number.
+  determination assignItemNumber   on save   { create; }
+
+  validation validateMaterial on save { create; field Material, Quantity; }
+
+
+  association _Process { with draft; }
+  association _ItemDoc { with draft; }
+
+  mapping for zsto_process_i
+  {
+    ItemUUID           = item_uuid;
+    ProcessUUID        = process_uuid;
+    ProcessItem        = process_item;
+    Material           = material;
+    Quantity           = quantity;
+    BaseUnit           = base_unit;
+    ItemValue          = item_value;
+    Currency           = currency;
+    Batch              = batch;
+    LocalLastChangedAt = local_last_changed_at;
+  }
+}
+
+// ===========================================================================
+// CHILD: Step log
+//
+// Written ONLY by the behavior pool, via EML. "internal create/update" keeps
+// both operations off the OData service, so no client can post or patch a
+// step row, while the pool can still write them IN LOCAL MODE.
+// ===========================================================================
+define behavior for ZI_STO_ProcessStep alias Step
+persistent table zsto_proc_step
+draft table zsto_proc_s_d
+lock dependent by _Process
+authorization dependent by _Process
+etag master LocalLastChangedAt
+{
+  field ( numbering : managed, readonly ) StepUUID;
+  field ( readonly ) ProcessUUID;
+
+//  internal create;
+  internal update;
+
+  // Calculated in the CDS view and unmapped -> must be readonly under
+  // strict(2). Everything else stays writable so the pool can maintain it.
+  field ( readonly ) LocalLastChangedAt,
+                     FlowState, FlowStateText, FlowNodeId, FlowLaneId,
+                     FlowIcon, StatusCriticality;
+
+  association _Process { with draft; }
+  association _ItemDoc { with draft; }
+
+  mapping for zsto_proc_step
+  {
+    StepUUID           = step_uuid;
+    ProcessUUID        = process_uuid;
+    StepSeq            = step_seq;
+    StepName           = step_name;
+    StepStatus         = step_status;
+    DocumentNumber     = document_number;
+    DocumentYear       = document_year;
+    DocumentDate       = document_date;
+    ErrorMessage       = error_message;
+    IsSkipped          = is_skipped;
+    ProcessedBy        = processed_by;
+    ProcessedAt        = processed_at;
+    LocalLastChangedAt = local_last_changed_at;
+  }
+}
+
+// ===========================================================================
+// CHILD: Item/document mapping - the traceability rows
+// ===========================================================================
+define behavior for ZI_STO_ProcessItemDoc alias ItemDoc
+persistent table zsto_proc_idoc
+draft table zsto_proc_d_d
+lock dependent by _Process
+authorization dependent by _Process
+etag master LocalLastChangedAt
+{
+  field ( numbering : managed, readonly ) MappingUUID;
+  field ( readonly ) ProcessUUID;
+
+//  internal create;
+
+  field ( readonly ) LocalLastChangedAt, DocumentDisplay, CreatedBy, CreatedAt;
+
+  association _Process { with draft; }
+
+  mapping for zsto_proc_idoc
+  {
+    MappingUUID        = mapping_uuid;
+    ProcessUUID        = process_uuid;
+    ProcessItem        = process_item;
+    StepSeq            = step_seq;
+    StepName           = step_name;
+    DocumentNumber     = document_number;
+    DocumentItem       = document_item;
+    DocumentYear       = document_year;
+    Quantity           = quantity;
+    BaseUnit           = base_unit;
+    CreatedBy          = created_by;
+    CreatedAt          = created_at;
+    LocalLastChangedAt = local_last_changed_at;
+  }
+}

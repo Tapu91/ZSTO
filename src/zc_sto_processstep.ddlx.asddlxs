@@ -43,7 +43,8 @@ annotate view ZC_STO_ProcessStep with
   IsSkipped;
   @UI.hidden: true
   StatusCriticality;
-  @UI.hidden: true
+  //  @UI.hidden: true
+  @UI.lineItem: [{ position: 80, importance: #LOW, label: 'Processed By' }]
   ProcessedBy;
 
   // Consumed by the ProcessFlow control via the custom section, not rendered
