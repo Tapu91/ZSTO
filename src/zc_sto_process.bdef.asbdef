@@ -32,6 +32,7 @@ use etag
 
   use association _Process { with draft; }
   use association _ItemDoc { with draft; }
+  use association _Batch { create;with draft; }
 }
 
 define behavior for ZC_STO_ProcessStep alias Step
@@ -45,4 +46,16 @@ define behavior for ZC_STO_ProcessItemDoc alias ItemDoc
 use etag
 {
   use association _Process { with draft; }
+}
+
+define behavior for ZC_STO_ProcessBatch alias Batch    // <-- NEW
+use etag
+{
+  use update;
+  use delete;
+
+  use association _Item { with draft; }
+  use association _Process { with draft; }
+
+
 }

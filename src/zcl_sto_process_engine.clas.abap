@@ -47,6 +47,7 @@ CLASS zcl_sto_process_engine DEFINITION
     METHODS determine_and_execute
       IMPORTING is_header        TYPE zif_sto_process_step=>ty_header
                 it_item          TYPE zif_sto_process_step=>tt_item
+                it_batch         TYPE zif_sto_process_step=>tt_batch
       RETURNING VALUE(rs_change) TYPE ty_state_change.
 
     "! State change that clears a failed step: recomputes the overall status
@@ -116,9 +117,9 @@ CLASS zcl_sto_process_engine IMPLEMENTATION.
         "--- 3. Run the handler -------------------------------------------
         " Handler creates its document via EML in THIS LUW. If it raises,
         " RAP discards the LUW, so there is nothing to undo here.
-        DATA(ls_result) = ls_step-handler->execute( is_header = is_header
-                                                    it_item   = it_item ).
-
+               DATA(ls_result) = ls_step-handler->execute( is_header = is_header
+                                                    it_item   = it_item
+                                                    it_batch  = it_batch ).
         "--- 4. Describe the resulting state ------------------------------
         rs_change-success         = abap_true.
         rs_change-step_status     = zif_sto_process_step=>gc_step_status-success.

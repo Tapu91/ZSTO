@@ -22,6 +22,7 @@ define view entity ZC_STO_ProcessItem
       Batch,
 
       LocalLastChangedAt,
+      BatchAssignAllowed,
 
       /* Read-only trace columns shown directly in the item table */
       _Trace.PODocument        as PODocument,
@@ -35,6 +36,7 @@ define view entity ZC_STO_ProcessItem
 
       /* Associations */
       _Process : redirected to parent ZC_STO_Process,
-      _ItemDoc : redirected to ZC_STO_ProcessItemDoc
+      _ItemDoc : redirected to ZC_STO_ProcessItemDoc,
+      _Batch : redirected to composition child ZC_STO_ProcessBatch
 //      _Material
 }

@@ -62,7 +62,7 @@ define view entity ZI_STO_ProcessStep
         when 'REQUEST'  then cast( 'sap-icon://request'          as abap.char( 40 ) )
         when 'PO'       then cast( 'sap-icon://sales-order'      as abap.char( 40 ) )
         when 'DELIVERY' then cast( 'sap-icon://shipping-status'  as abap.char( 40 ) )
-        when 'PGI'      then cast( 'sap-icon://goods-issue'      as abap.char( 40 ) )
+        when 'PGI'      then cast( 'sap-icon://cart-2'      as abap.char( 40 ) )
         when 'BILLING'  then cast( 'sap-icon://money-bills'      as abap.char( 40 ) )
         when 'GR'       then cast( 'sap-icon://cart'             as abap.char( 40 ) )
         else                 cast( 'sap-icon://circle-task'      as abap.char( 40 ) )

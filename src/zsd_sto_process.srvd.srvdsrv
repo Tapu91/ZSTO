@@ -4,4 +4,6 @@ define service ZSD_STO_Process {
   expose ZC_STO_ProcessItem    as StoProcessItem;
   expose ZC_STO_ProcessStep    as StoProcessStep;
   expose ZC_STO_ProcessItemDoc as StoProcessItemDoc;
+  expose ZC_STO_ProcessBatch   as StoProcessBatch;
+  expose ZI_STO_BatchStockVH   as BatchStock;
 }

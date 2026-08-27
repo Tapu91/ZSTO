@@ -59,5 +59,6 @@ define root view entity ZC_STO_Process
       /* Associations */
       _Item  : redirected to composition child ZC_STO_ProcessItem,
       _Step  : redirected to composition child ZC_STO_ProcessStep,
-      _ItemDoc : redirected to composition child ZC_STO_ProcessItemDoc
+      _ItemDoc : redirected to composition child ZC_STO_ProcessItemDoc,
+      _Batch : redirected to  ZC_STO_ProcessBatch
 }

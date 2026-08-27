@@ -13,6 +13,7 @@
 
 annotate view ZC_STO_Process with
 {
+
   @UI.facet: [
     // ---------- Object page header facets ----------
     {
@@ -82,7 +83,7 @@ annotate view ZC_STO_Process with
 
   @UI.lineItem: [
     { position: 10, importance: #HIGH },
-    { type: #FOR_ACTION, dataAction: 'processNextStep',
+    { type: #FOR_ACTION, dataAction: 'processNextStep', iconUrl: 'sap-icon://play',
       label: 'Execute Next Step', invocationGrouping: #ISOLATED }
   ]
   @UI.selectionField: [{ position: 10 }]
@@ -94,7 +95,7 @@ annotate view ZC_STO_Process with
     { type: #FOR_ACTION, dataAction: 'processNextStep',
       label: 'Execute Next Step', importance: #HIGH },
     { type: #FOR_ACTION, dataAction: 'resetFailedStep',
-      label: 'Reset Failed Step', importance: #MEDIUM }
+      label: 'Reset Step', importance: #MEDIUM }
   ]
   ProcessID;
 

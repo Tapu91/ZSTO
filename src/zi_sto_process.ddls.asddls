@@ -13,6 +13,7 @@ define root view entity ZI_STO_Process
   composition [0..*] of ZI_STO_ProcessItem    as _Item
   composition [0..*] of ZI_STO_ProcessStep    as _Step
   composition [0..*] of ZI_STO_ProcessItemDoc as _ItemDoc
+  association [0..*] to ZI_STO_ProcessBatch   as _Batch        on  $projection.ProcessUUID = _Batch.ProcessUUID
 
   //  association [0..1] to I_Plant     as _FromPlantVH on $projection.FromPlant = _FromPlantVH.Plant
   //  association [0..1] to I_Plant     as _ToPlantVH   on $projection.ToPlant   = _ToPlantVH.Plant
@@ -92,7 +93,8 @@ define root view entity ZI_STO_Process
 
       _Item,
       _Step,
-      _ItemDoc
+      _ItemDoc,
+      _Batch
       //      _FromPlantVH,
       //      _ToPlantVH
 }

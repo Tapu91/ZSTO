@@ -27,19 +27,14 @@ etag master LocalLastChangedAt
   update;
   delete ( features : instance );
 
-  // -------------------------------------------------------------------
-  // THE action button on the object page. One click = one document.
-  // -------------------------------------------------------------------
+
   action ( features : instance ) processNextStep result [1] $self;
 
-  // Clears an 'E' step so the same step can be retried cleanly.
   action ( features : instance ) resetFailedStep result [1] $self;
 
   determination setInitialState      on modify { create; }
   determination assignProcessID      on save   { create; }
 
-  // Lays down one step-log row per configured step, through RAP instead of
-  // the direct INSERT that used to live in the saver.
   determination createStepLog        on save   { create; }
 
   validation validateHeader          on save   { create; field FromPlant, ToPlant, TransferDate; }
@@ -56,6 +51,10 @@ etag master LocalLastChangedAt
     validation validateHeader;
     validation validateItems;
     validation validateConfiguration;
+//    validation Item ~ validateBatchSum;
+    validation Item ~ validateUniqueMaterial;
+    validation Batch ~ validateBatchQuantity;
+
   }
 
 side effects {
@@ -65,9 +64,6 @@ side effects {
 }
 
   association _Item    { create ( features : instance ); with draft; }
-  // create is needed so the pool can use CREATE BY \_Step / \_ItemDoc.
-  // Both child entities declare "internal create", so this is reachable
-  // only from the behavior pool - never from the OData client.
   association _Step    { internal create; with draft; }
   association _ItemDoc { internal create; with draft; }
 
@@ -125,15 +121,18 @@ etag master LocalLastChangedAt
 
   determination deriveMaterialData on modify { create; field Material; }
 
-  // Assigns the STABLE ANCHOR (0010, 0020, ...). On the ITEM, not the
-  // header, so items added in a later edit also get a number.
   determination assignItemNumber   on save   { create; }
 
   validation validateMaterial on save { create; field Material, Quantity; }
+//  validation validateBatchSum      on save   { create; update; field Quantity; }
+  validation validateItemQuantity  on save   { create; update; field Quantity; }
+  // No material twice across the item lines.
+  validation validateUniqueMaterial on save  { create; update; field Material; }
 
 
   association _Process { with draft; }
   association _ItemDoc { with draft; }
+  association _Batch   { create( features: instance ) ; with draft; }
 
   mapping for zsto_process_i
   {
@@ -150,13 +149,7 @@ etag master LocalLastChangedAt
   }
 }
 
-// ===========================================================================
-// CHILD: Step log
-//
-// Written ONLY by the behavior pool, via EML. "internal create/update" keeps
-// both operations off the OData service, so no client can post or patch a
-// step row, while the pool can still write them IN LOCAL MODE.
-// ===========================================================================
+
 define behavior for ZI_STO_ProcessStep alias Step
 persistent table zsto_proc_step
 draft table zsto_proc_s_d
@@ -170,8 +163,6 @@ etag master LocalLastChangedAt
 //  internal create;
   internal update;
 
-  // Calculated in the CDS view and unmapped -> must be readonly under
-  // strict(2). Everything else stays writable so the pool can maintain it.
   field ( readonly ) LocalLastChangedAt,
                      FlowState, FlowStateText, FlowNodeId, FlowLaneId,
                      FlowIcon, StatusCriticality;
@@ -197,9 +188,6 @@ etag master LocalLastChangedAt
   }
 }
 
-// ===========================================================================
-// CHILD: Item/document mapping - the traceability rows
-// ===========================================================================
 define behavior for ZI_STO_ProcessItemDoc alias ItemDoc
 persistent table zsto_proc_idoc
 draft table zsto_proc_d_d
@@ -230,6 +218,53 @@ etag master LocalLastChangedAt
     BaseUnit           = base_unit;
     CreatedBy          = created_by;
     CreatedAt          = created_at;
+    LocalLastChangedAt = local_last_changed_at;
+  }
+}
+
+define behavior for ZI_STO_ProcessBatch alias Batch
+persistent table zsto_proc_batch
+draft table zsto_proc_b_d
+lock dependent by _Process
+authorization dependent by _Process
+etag master LocalLastChangedAt
+{
+  field ( numbering : managed, readonly ) BatchUUID;
+
+  field ( readonly : update ) ProcessUUID, ItemUUID, ProcessItem;
+
+  field ( readonly ) LocalLastChangedAt, DaysToExpiry, ExpiryCriticality;
+
+  field ( readonly ) PoItemNo;
+
+  update ( features : instance );
+  delete ( features : instance );
+
+  determination deriveBatchKeys   on modify { create; }
+  determination syncItemQuantity  on modify { create; update; delete; }
+  determination assignPoItemNo on save { create; update; }
+  validation validateBatchQuantity on save { create; update; field Quantity, Batch; }
+
+  association _Item    { with draft; }
+  association _Process { with draft; }
+ side effects
+  {
+    field Quantity affects entity _Item, $self;
+    field Batch    affects  $self;
+  }
+  mapping for zsto_proc_batch
+  {
+    BatchUUID          = batch_uuid;
+    ProcessUUID        = process_uuid;
+    ItemUUID           = item_uuid;
+    ProcessItem        = process_item;
+    Batch              = batch;
+    Quantity           = quantity;
+    BaseUnit           = base_unit;
+    ExpiryDate         = expiry_date;
+    AvailableQuantity  = available_qty;
+    StorageLocation    = stor_loc;
+    PoItemNo           = po_item_no;
     LocalLastChangedAt = local_last_changed_at;
   }
 }

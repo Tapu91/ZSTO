@@ -2,23 +2,17 @@ INTERFACE zif_sto_process_step
   PUBLIC.
 
   TYPES:
-    "! Header and items are typed on the CDS VIEWS, not on the database
-    "! tables. That is deliberate: the CDS element names (ProcessUUID,
-    "! FromPlant, ...) are identical to the names in the RAP derived types,
-    "! so the behavior pool can fill them with a plain CORRESPONDING #( )
-    "! instead of ~20 lines of hand-written field assignments.
     ty_header TYPE ZI_STO_Process.
 
   TYPES:
-    tt_item TYPE STANDARD TABLE OF zi_sto_processitem WITH EMPTY KEY.
+    tt_item TYPE STANDARD TABLE OF zi_sto_processitem WITH EMPTY KEY,
+    tt_batch TYPE STANDARD TABLE OF zi_sto_processbatch WITH EMPTY KEY.
 
   TYPES:
-    "! ONE ROW PER PROCESS ITEM that ended up in the created document.
-    "! This is what makes line-level traceability work: the handler tells
-    "! the engine which document item corresponds to which stable process
-    "! item. The engine persists it - the handler never writes.
     BEGIN OF ty_item_doc_map,
       process_item    TYPE zsto_process_item,
+      batch           TYPE charg_d,
+      po_item_no      TYPE zsto_doc_item,
       document_number TYPE zsto_doc_number,
       document_item   TYPE zsto_doc_item,
       document_year   TYPE zsto_doc_year,
@@ -65,28 +59,17 @@ INTERFACE zif_sto_process_step
       error     TYPE zsto_overall_status VALUE '90',
     END OF gc_overall_status.
 
-  "! Creates exactly ONE document and returns its number plus the item-level
-  "! mapping back to the process items.
-  "!
-  "! CONTRACT:
-  "!  - No commit, no direct DB write, no classic FM (see class docu above).
-  "!  - On a business error: raise ZCX_STO_STEP_ERROR. The engine will mark
-  "!    the step 'E' and leave CURRENT_STEP_SEQ untouched so the next click
-  "!    retries the SAME step. RAP rolls the LUW back, so nothing the handler
-  "!    created via EML is persisted - a retry is therefore always safe and
-  "!    cannot produce a duplicate document.
+
   METHODS execute
     IMPORTING
       is_header        TYPE ty_header
       it_item          TYPE tt_item
+      it_batch         TYPE tt_batch OPTIONAL
     RETURNING
       VALUE(rs_result) TYPE ty_step_result
     RAISING
       zcx_sto_step_error.
 
-  "! Lets a step opt out for a given process (e.g. Billing is skipped for
-  "! intracompany STOs). Default implementation in ZCL_STO_STEP_BASE reads
-  "! the ONLY_INTERCOMPANY / ONLY_INTRACOMPANY flags from ZSTO_STEPCUST.
   METHODS is_applicable
     IMPORTING
       is_header            TYPE ty_header
